@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --env-file=.env test-cron.js"
+    "test": "node --env-file=.env tests/test-suite.js",
+    "test:cron": "node --env-file=.env tests/test-cron.js"
   },
   "keywords": [],
   "author": "",

@@ -1,8 +1,8 @@
 import assert from 'assert';
-import { isMarketClosed } from './lib/bot.js';
-import { detectCandlestickPattern, calcFibonacci } from './lib/deriv.js';
-import { sanitizeForTelegram, splitTelegramMessage, escapeHtml } from './lib/utils.js';
-import { getUpcomingHighImpactNews } from './lib/news.js';
+import { isMarketClosed } from '../lib/bot.js';
+import { detectCandlestickPattern, calcFibonacci } from '../lib/deriv.js';
+import { sanitizeForTelegram, splitTelegramMessage, escapeHtml } from '../lib/utils.js';
+import { getUpcomingHighImpactNews } from '../lib/news.js';
 
 console.log('🧪 Starting XAU Sentinel Comprehensive Test Suite...\n');
 

@@ -1,4 +1,4 @@
-import { runScoutBot } from './lib/bot.js';
+import { runScoutBot } from '../lib/bot.js';
 
 async function runTests() {
     console.log("=== 🧪 เริ่มการทดสอบ Hybrid Scout Bot ===");
