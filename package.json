@@ -2,7 +2,7 @@
   "name": "xau-sentinel",
   "version": "1.0.0",
   "description": "TradingView to Telegram webhook system powered by Gemini AI",
-  "main": "api/cron.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
     "start": "node server.js",
