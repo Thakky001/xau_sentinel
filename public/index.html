@@ -429,9 +429,19 @@
                 </div>
                 <div style="font-size:.72rem;color:var(--text-dim)">${a.session}</div>
             `;
+
+            if (a.triggers && a.triggers.length > 0) {
+                $('analysis-content').innerHTML += `<div style="margin-top:12px;padding:10px;border-radius:8px;
+                                     background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.15)">
+                    <div style="font-size:.7rem;font-weight:600;color:var(--gold);margin-bottom:6px">
+                        🔔 ปลุกเพราะ (${a.triggers.length} สัญญาณ)
+                    </div>
+                    ${a.triggers.map(t => `<div style="font-size:.75rem;color:var(--text-dim);padding:2px 0">→ ${t}</div>`).join('')}
+                </div>`;
+            }
         } else {
             $('analysis-ago').textContent = '';
-            $('analysis-content').innerHTML = '<div class="empty-state">ยังไม่มีข้อมูลการวิเคราะห์ในเซสชันนี้<br><small style="opacity:.5">จะมีข้อมูลเมื่อ RSI เข้าเขต Overbought/Oversold</small></div>';
+            $('analysis-content').innerHTML = '<div class="empty-state">ยังไม่มีข้อมูลการวิเคราะห์ในเซสชันนี้<br><small style="opacity:.5">จะมีข้อมูลเมื่อพบสัญญาณ (RSI/Fibo/Pattern/Breakout)</small></div>';
         }
 
         // ── Logs ──
