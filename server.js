@@ -1,10 +1,9 @@
-// ต้อง import logger ก่อนทุกอย่าง เพื่อให้ intercept console ได้ทันที
 import './lib/logger.js';
 
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { runScoutBot, getBotState } from './lib/bot.js';
+import { runScoutBot, getBotState, setNextRunAt } from './lib/bot.js';
 import { getLogs } from './lib/logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -67,6 +66,9 @@ function scheduleBot() {
         timeZone: 'Asia/Bangkok'
     });
     console.log(`🕐 Scheduler: จะรันครั้งถัดไปเวลา ${hhmm} (อีก ${Math.round(delay/1000)} วินาที)`);
+
+    // อัปเดต nextRunAt ใน dashboard ทันที ไม่ต้องรอให้ bot รันก่อน
+    setNextRunAt(Date.now() + delay);
 
     setTimeout(() => {
         runScoutBot();
