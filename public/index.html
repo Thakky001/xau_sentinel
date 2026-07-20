@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAU Sentinel — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:        #0a0e1a;
+            --surface:   #111827;
+            --surface2:  #1a2236;
+            --border:    rgba(255,255,255,0.07);
+            --gold:      #f5c842;
+            --gold-dim:  rgba(245,200,66,0.15);
+            --green:     #22c55e;
+            --green-dim: rgba(34,197,94,0.15);
+            --red:       #ef4444;
+            --red-dim:   rgba(239,68,68,0.15);
+            --yellow:    #f59e0b;
+            --yellow-dim:rgba(245,158,11,0.15);
+            --blue:      #60a5fa;
+            --blue-dim:  rgba(96,165,250,0.12);
+            --muted:     #6b7280;
+            --text:      #e2e8f0;
+            --text-dim:  #94a3b8;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 28px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: .5px;
+        }
+        .logo span { color: var(--gold); }
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .75rem;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(34,197,94,.3);
+        }
+        .badge.offline { background:var(--red-dim); color:var(--red); border-color:rgba(239,68,68,.3); }
+        .dot { width:7px; height:7px; border-radius:50%; background:currentColor; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        /* ── Grid ── */
+        main { padding: 24px 28px; max-width: 1300px; margin: 0 auto; }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            transition: border-color .2s;
+        }
+        .card:hover { border-color: rgba(255,255,255,0.14); }
+        .card-label {
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+        }
+        .card-sub {
+            font-size: .75rem;
+            color: var(--text-dim);
+            margin-top: 6px;
+        }
+
+        /* ── Countdown color ── */
+        .countdown-soon { color: var(--yellow); }
+        .countdown-ok   { color: var(--gold); }
+
+        /* ── Pill tags ── */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+        .pill.green  { background:var(--green-dim);  color:var(--green);  }
+        .pill.red    { background:var(--red-dim);    color:var(--red);    }
+        .pill.yellow { background:var(--yellow-dim); color:var(--yellow); }
+        .pill.blue   { background:var(--blue-dim);   color:var(--blue);   }
+        .pill.gold   { background:var(--gold-dim);   color:var(--gold);   }
+
+        /* ── Analysis Card ── */
+        .analysis-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 20px;
+        }
+        .analysis-card .card-label { margin-bottom: 14px; }
+        .analysis-metrics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 14px;
+        }
+        .metric { display: flex; flex-direction: column; gap: 3px; }
+        .metric-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text);
+        }
+        .decision-BUY  { color: var(--green); }
+        .decision-SELL { color: var(--red); }
+        .decision-WAIT { color: var(--yellow); }
+        .empty-state {
+            color: var(--muted);
+            font-size: .85rem;
+            text-align: center;
+            padding: 28px 0;
+        }
+
+        /* ── Log Panel ── */
+        .log-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .log-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+        }
+        .log-header-left { display: flex; align-items: center; gap: 10px; }
+        .log-count {
+            font-size: .7rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            border-radius: 999px;
+            color: var(--text-dim);
+        }
+        .log-scroll {
+            max-height: 420px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .76rem;
+            line-height: 1.6;
+        }
+        .log-scroll::-webkit-scrollbar { width: 5px; }
+        .log-scroll::-webkit-scrollbar-track { background: transparent; }
+        .log-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .log-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 6px 20px;
+            border-bottom: 1px solid rgba(255,255,255,.03);
+            transition: background .15s;
+        }
+        .log-row:hover { background: rgba(255,255,255,.03); }
+        .log-row.warn  { border-left: 2px solid var(--yellow); }
+        .log-row.error { border-left: 2px solid var(--red); background: rgba(239,68,68,.04); }
+        .log-row.info  { border-left: 2px solid transparent; }
+
+        .log-time { color: var(--muted); white-space: nowrap; flex-shrink: 0; font-size: .7rem; padding-top: 2px; }
+        .log-level {
+            flex-shrink: 0;
+            width: 36px;
+            font-size: .65rem;
+            font-weight: 700;
+            text-align: center;
+            padding-top: 2px;
+        }
+        .log-level.info  { color: var(--blue); }
+        .log-level.warn  { color: var(--yellow); }
+        .log-level.error { color: var(--red); }
+        .log-msg { color: var(--text); word-break: break-all; white-space: pre-wrap; }
+        .log-empty { padding: 40px 20px; text-align: center; color: var(--muted); font-family: 'Inter', sans-serif; }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: .72rem;
+            padding: 20px;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            main { padding: 16px; }
+            header { padding: 14px 16px; }
+            .card-value { font-size: 1.5rem; }
+            .analysis-metrics { gap: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">⚡ XAU <span>SENTINEL</span></div>
+    <div class="badge" id="online-badge"><span class="dot"></span> ONLINE</div>
+</header>
+
+<main>
+
+    <!-- ── Stat Cards ── -->
+    <div class="stat-grid">
+
+        <div class="card">
+            <div class="card-label">⏱️ Next Run</div>
+            <div class="card-value countdown-ok" id="countdown">--:--</div>
+            <div class="card-sub" id="next-run-time">กำลังโหลด...</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">🔄 Cooldown</div>
+            <div class="card-value" id="cooldown-val" style="font-size:1.3rem;padding-top:6px">--</div>
+            <div class="card-sub" id="cooldown-sub">กำลังโหลด...</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">📈 ตลาด</div>
+            <div style="margin-top:4px" id="market-status">--</div>
+            <div class="card-sub" id="market-session" style="margin-top:8px">กำลังโหลด...</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">🤖 สถานะบอท</div>
+            <div style="margin-top:4px" id="bot-status">--</div>
+            <div class="card-sub" id="last-run-time" style="margin-top:8px">กำลังโหลด...</div>
+        </div>
+
+    </div>
+
+    <!-- ── Last Analysis ── -->
+    <div class="analysis-card">
+        <div class="card-label">🧠 Last Analysis <span id="analysis-ago" style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--text-dim)"></span></div>
+        <div id="analysis-content">
+            <div class="empty-state">ยังไม่มีข้อมูลการวิเคราะห์ในเซสชันนี้</div>
+        </div>
+    </div>
+
+    <!-- ── Log Panel ── -->
+    <div class="log-panel">
+        <div class="log-header">
+            <div class="log-header-left">
+                <div class="card-label" style="margin:0">📜 Application Log</div>
+                <span class="log-count" id="log-count">0 รายการ</span>
+            </div>
+            <div style="font-size:.7rem;color:var(--muted)">อัปเดตทุก 5 วินาที</div>
+        </div>
+        <div class="log-scroll" id="log-container">
+            <div class="log-empty">กำลังโหลด log...</div>
+        </div>
+    </div>
+
+</main>
+
+<footer>XAU Sentinel Dashboard — Powered by Gemini AI &amp; Deriv API</footer>
+
+<script>
+    // ── Utilities ──────────────────────────────────────────────
+    const $ = id => document.getElementById(id);
+
+    function fmtTime(ts) {
+        if (!ts) return '—';
+        return new Date(ts).toLocaleTimeString('th-TH', {
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            timeZone: 'Asia/Bangkok'
+        });
+    }
+
+    function fmtAgo(ts) {
+        if (!ts) return '';
+        const diff = Math.floor((Date.now() - ts) / 1000);
+        if (diff < 60) return `${diff} วินาทีที่แล้ว`;
+        if (diff < 3600) return `${Math.floor(diff/60)} นาทีที่แล้ว`;
+        return `${Math.floor(diff/3600)} ชั่วโมงที่แล้ว`;
+    }
+
+    function formatCountdown(ms) {
+        if (ms <= 0) return '00:00';
+        const m = Math.floor(ms / 60000);
+        const s = Math.floor((ms % 60000) / 1000);
+        return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function pill(text, color) {
+        return `<span class="pill ${color}">${text}</span>`;
+    }
+
+    // ── State ──────────────────────────────────────────────────
+    let state = null;
+
+    // ── Fetch & Render ─────────────────────────────────────────
+    async function fetchStatus() {
+        try {
+            const res = await fetch('/api/status');
+            if (!res.ok) throw new Error('API error');
+            state = await res.json();
+            render(state);
+            $('online-badge').className = 'badge';
+            $('online-badge').innerHTML = '<span class="dot"></span> ONLINE';
+        } catch (e) {
+            $('online-badge').className = 'badge offline';
+            $('online-badge').innerHTML = '<span class="dot"></span> OFFLINE';
+        }
+    }
+
+    function render(s) {
+        // ── Market ──
+        if (s.isMarketOpen) {
+            $('market-status').innerHTML = pill('⚡ ตลาดเปิด', 'green');
+        } else {
+            $('market-status').innerHTML = pill('🔒 ตลาดปิด', 'red');
+        }
+        const sessionShort = (s.currentSession || '').split(' ')[0] + ' ' + (s.currentSession || '').split(' ').slice(1,3).join(' ');
+        $('market-session').textContent = s.currentSession || '—';
+
+        // ── Bot Status ──
+        if (s.isRunning) {
+            $('bot-status').innerHTML = pill('⚙️ กำลังวิเคราะห์...', 'gold');
+        } else if (s.isInCooldown) {
+            $('bot-status').innerHTML = pill('⏳ Cooldown', 'yellow');
+        } else {
+            $('bot-status').innerHTML = pill('✅ พร้อม', 'green');
+        }
+        $('last-run-time').textContent = s.lastRunAt
+            ? `รันล่าสุด: ${fmtTime(s.lastRunAt)}`
+            : 'ยังไม่ได้รันในเซสชันนี้';
+
+        // ── Cooldown ──
+        if (s.isInCooldown && s.cooldownEndsAt) {
+            const remaining = s.cooldownEndsAt - Date.now();
+            $('cooldown-val').innerHTML = pill(`⏳ ${formatCountdown(remaining)}`, 'yellow');
+            $('cooldown-sub').textContent = `Cooldown หมด: ${fmtTime(s.cooldownEndsAt)}`;
+        } else if (s.lastAlertAt) {
+            $('cooldown-val').innerHTML = pill('✅ พร้อมส่งสัญญาณ', 'green');
+            $('cooldown-sub').textContent = `ส่งล่าสุด: ${fmtTime(s.lastAlertAt)}`;
+        } else {
+            $('cooldown-val').innerHTML = pill('✅ พร้อมส่งสัญญาณ', 'green');
+            $('cooldown-sub').textContent = 'ยังไม่เคยส่งสัญญาณ';
+        }
+
+        // ── Last Analysis ──
+        if (s.lastAnalysis) {
+            const a = s.lastAnalysis;
+            $('analysis-ago').textContent = '— ' + fmtAgo(a.ts);
+            const decClass = `decision-${a.decision}`;
+            $('analysis-content').innerHTML = `
+                <div class="analysis-metrics">
+                    <div class="metric">
+                        <span class="metric-label">ราคา XAUUSD</span>
+                        <span class="metric-value">$${a.price?.toLocaleString('en-US', {minimumFractionDigits:2})}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">RSI (M15)</span>
+                        <span class="metric-value" style="color:${a.rsi > 65 ? 'var(--red)' : a.rsi < 35 ? 'var(--green)' : 'var(--text)'}">${a.rsi}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">ADX (H1)</span>
+                        <span class="metric-value" style="color:${a.adx > 25 ? 'var(--green)' : 'var(--yellow)'}">${a.adx ?? '—'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">เทรนด์ H1</span>
+                        <span class="metric-value" style="color:${a.trend === 'ขาขึ้น' ? 'var(--green)' : 'var(--red)'}">${a.trend === 'ขาขึ้น' ? '↑ ขาขึ้น' : '↓ ขาลง'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">AI Decision</span>
+                        <span class="metric-value ${decClass}">${a.decision}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">ข่าวแดง</span>
+                        <span class="metric-value">${a.hasNews ? pill('⚠️ มีข่าว', 'red') : pill('✅ ไม่มีข่าว', 'green')}</span>
+                    </div>
+                </div>
+                <div style="font-size:.72rem;color:var(--text-dim)">${a.session}</div>
+            `;
+        } else {
+            $('analysis-ago').textContent = '';
+            $('analysis-content').innerHTML = '<div class="empty-state">ยังไม่มีข้อมูลการวิเคราะห์ในเซสชันนี้<br><small style="opacity:.5">จะมีข้อมูลเมื่อ RSI เข้าเขต Overbought/Oversold</small></div>';
+        }
+
+        // ── Logs ──
+        const logs = s.logs || [];
+        $('log-count').textContent = `${logs.length} รายการ`;
+        if (logs.length === 0) {
+            $('log-container').innerHTML = '<div class="log-empty">ยังไม่มี log ในเซสชันนี้</div>';
+        } else {
+            $('log-container').innerHTML = logs.map(l => {
+                const time = new Date(l.ts).toLocaleTimeString('th-TH', {
+                    hour: '2-digit', minute: '2-digit', second: '2-digit',
+                    timeZone: 'Asia/Bangkok'
+                });
+                // แปลง emoji ใน log message ให้ดูดีขึ้น
+                const msg = l.message
+                    .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return `<div class="log-row ${l.level}">
+                    <span class="log-time">${time}</span>
+                    <span class="log-level ${l.level}">${l.level.toUpperCase()}</span>
+                    <span class="log-msg">${msg}</span>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    // ── Countdown Timer (runs every second in browser) ─────────
+    function tickCountdown() {
+        if (!state || !state.nextRunAt) return;
+        const ms = state.nextRunAt - Date.now();
+        const el = $('countdown');
+        const sub = $('next-run-time');
+
+        if (ms <= 0) {
+            el.textContent = '00:00';
+            el.className = 'card-value countdown-soon';
+            sub.textContent = 'กำลังรัน...';
+        } else {
+            el.textContent = formatCountdown(ms);
+            el.className = ms < 60000
+                ? 'card-value countdown-soon'
+                : 'card-value countdown-ok';
+            sub.textContent = `ครั้งต่อไป: ${fmtTime(state.nextRunAt)}`;
+        }
+
+        // อัปเดต cooldown countdown แบบ realtime ด้วย
+        if (state.isInCooldown && state.cooldownEndsAt) {
+            const remaining = state.cooldownEndsAt - Date.now();
+            if (remaining > 0) {
+                $('cooldown-val').innerHTML = `<span class="pill yellow">⏳ ${formatCountdown(remaining)}</span>`;
+            }
+        }
+    }
+
+    // ── Init ───────────────────────────────────────────────────
+    fetchStatus();
+    setInterval(fetchStatus, 5000);   // ดึงข้อมูลใหม่ทุก 5 วินาที
+    setInterval(tickCountdown, 1000); // countdown วิ่งทุกวินาที
+</script>
+
+</body>
+</html>
