@@ -40,13 +40,37 @@ app.get('/', (req, res) => {
 // ─── Start Server ────────────────────────────────────────────
 app.listen(PORT, () => {
     console.log(`🚀 XAU Sentinel Server is running on port ${PORT}`);
-
-    // รันครั้งแรกทันที
-    runScoutBot();
-
-    // Loop ทุก 15 นาที
-    const INTERVAL_MS = 15 * 60 * 1000;
-    setInterval(() => {
-        runScoutBot();
-    }, INTERVAL_MS);
+    scheduleBot();
 });
+
+// ─── M15 Clock-Snapped Scheduler ─────────────────────────────
+// รันหลังแท่งเทียน M15 ปิด 5 วินาที (:00:05, :15:05, :30:05, :45:05)
+// ทำให้ข้อมูลแท่งปิดสมบูรณ์ก่อนวิเคราะห์เสมอ
+// และ Render restart กลางทางก็ไม่ทำให้ timing เพี้ยน
+
+const INTERVAL_MS  = 15 * 60 * 1000; // 15 นาที
+const CANDLE_DELAY =      5 * 1000;  // รอ 5 วิ หลังแท่งปิด
+
+function msUntilNextM15() {
+    const now  = Date.now();
+    // หา timestamp ของ M15 slot ถัดไป (:00, :15, :30, :45)
+    const next = Math.ceil(now / INTERVAL_MS) * INTERVAL_MS;
+    // บวก delay 5 วิ เพื่อให้แท่งปิดสมบูรณ์
+    return (next + CANDLE_DELAY) - now;
+}
+
+function scheduleBot() {
+    const delay = msUntilNextM15();
+    const runAt = new Date(Date.now() + delay);
+    const hhmm  = runAt.toLocaleTimeString('th-TH', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        timeZone: 'Asia/Bangkok'
+    });
+    console.log(`🕐 Scheduler: จะรันครั้งถัดไปเวลา ${hhmm} (อีก ${Math.round(delay/1000)} วินาที)`);
+
+    setTimeout(() => {
+        runScoutBot();
+        // หลังรันแล้ว วนซ้ำ — ครั้งต่อไปจะตรงกับ M15 ถัดไปเสมอ
+        scheduleBot();
+    }, delay);
+}
