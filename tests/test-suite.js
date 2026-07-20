@@ -30,11 +30,13 @@ runTest('calcFibonacci() calculates 50% and 61.8% correctly', () => {
     const high = 4000;
     const low = 3900;
     // Diff = 100
-    // 61.8% from top = Low + (100 * 0.382) = 3938.2
-    // 50.0% from top = Low + (100 * 0.5) = 3950
+    // 38.2% from bottom = Low + (100 * 0.382) = 3938.2
+    // 50.0% from bottom = Low + (100 * 0.5) = 3950
+    // 61.8% from bottom = Low + (100 * 0.618) = 3961.8
     const fibo = calcFibonacci(high, low);
     assert.strictEqual(fibo.level_50_0, 3950);
-    assert.strictEqual(fibo.level_61_8, 3938.2);
+    assert.strictEqual(fibo.level_38_2, 3938.2);
+    assert.strictEqual(fibo.level_61_8, 3961.8);
 });
 
 runTest('detectCandlestickPattern() detects Bullish Pin Bar', () => {
