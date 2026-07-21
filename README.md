@@ -22,10 +22,13 @@
 3. **Multi-Timeframe Analysis (MTFA):** 
    ดึงกราฟ H1 (ดูเทรนด์ใหญ่และพละกำลังผ่าน EMA + ADX) และ M15 (หาจุดเข้าที่เฉียบคมและแม่นยำ) ไปพร้อมกัน
 
-4. **News Filter (ระบบหลบข่าว):** 
+4. **AI Fallback System (สมองกลสำรอง):**
+   หากเซิร์ฟเวอร์ Google (Gemini) ขัดข้องหรือติดลิมิต บอทจะสลับไปใช้ **Groq (Llama 3)** อัตโนมัติ เพื่อให้ออเดอร์ไม่สะดุด
+
+5. **News Filter (ระบบหลบข่าว):** 
    ดึงปฏิทินข่าวเศรษฐกิจ (USD High Impact) จาก ForexFactory หากมีข่าวแดง AI จะรับทราบและปรับความเสี่ยงให้
 
-5. **Live Dashboard:**
+6. **Live Dashboard:**
    มาพร้อมหน้าเว็บ UI โทนดาร์กสไตล์ Terminal ให้คุณสามารถเปิดเข้าไปดู:
    - สเตตัสการรันรอบถัดไป
    - เหตุผล (Triggers) ที่ปลุก AI ขึ้นมาทำงานรอบล่าสุด
@@ -39,6 +42,7 @@
 
 ### ขั้นตอนที่ 1: ขอ API Keys ที่จำเป็น (ฟรีทั้งหมด)
 - `GEMINI_API_KEY`: ขอจาก [Google AI Studio](https://aistudio.google.com/)
+- `GROQ_API_KEY`: ขอจาก [Groq Cloud](https://console.groq.com/keys) (เผื่อเป็น AI สำรอง)
 - `TELEGRAM_BOT_TOKEN`: ขอจาก [@BotFather](https://t.me/BotFather) บน Telegram
 - `TELEGRAM_CHAT_ID`: ใช้ [@userinfobot](https://t.me/userinfobot) เพื่อดูรหัสแชทของคุณ
 
@@ -55,8 +59,9 @@
    - **Build Command:** `npm install`
    - **Start Command:** `npm start`
    - **Instance Type:** Free
-5. เลื่อนลงมาที่ **Environment Variables** (กด Advanced) และใส่ค่าทั้ง 3 ตัว:
+5. เลื่อนลงมาที่ **Environment Variables** (กด Advanced) และใส่ค่าทั้ง 4 ตัว:
    - `GEMINI_API_KEY`
+   - `GROQ_API_KEY`
    - `TELEGRAM_BOT_TOKEN`
    - `TELEGRAM_CHAT_ID`
 6. กด **Create Web Service** และรอจนกว่า Render จะรันเสร็จ คุณจะได้ URL ของเซิร์ฟเวอร์มา (เช่น `https://xau-sentinel.onrender.com`) **ลิงก์นี้คือหน้า Dashboard ของคุณ!**
@@ -85,6 +90,7 @@ npm install
 
 # 2. สร้างไฟล์ .env และใส่ API Keys ของคุณ
 # GEMINI_API_KEY=xxx
+# GROQ_API_KEY=gsk_xxx
 # TELEGRAM_BOT_TOKEN=xxx
 # TELEGRAM_CHAT_ID=xxx
 
