@@ -10,24 +10,24 @@ async function testFallback() {
     let aiResponse;
     let usedFallback = false;
     
-    // จำลองสถานการณ์ Gemini ล่ม (โดยส่ง Prompt ปลอมที่อาจจะโดนแบน หรือแค่จำลอง throw)
-    console.log("1. Forcing Gemini to fail...");
+    // จำลองสถานการณ์ Groq ล่ม 
+    console.log("1. Forcing Groq to fail...");
     try {
-        // แกล้งจำลองว่า Gemini ล่ม
+        // แกล้งจำลองว่า Groq ล่ม
         throw new Error("503 Service Unavailable (Simulated)");
-    } catch (geminiErr) {
-        console.warn(`[Fallback] Gemini ล่มหรือติดลิมิต (${geminiErr.message})... กำลังสลับไปใช้ Groq AI สำรอง!`);
+    } catch (groqErr) {
+        console.warn(`[Fallback] Groq ล่มหรือติดลิมิต (${groqErr.message})... กำลังสลับไปใช้ Gemini AI สำรอง!`);
         try {
-            aiResponse = await fetchWithRetry(() => analyzeTradingWithGroq(dummyPrompt, systemInstruction), 3, 1000);
+            aiResponse = await fetchWithRetry(() => analyzeTrading(dummyPrompt, systemInstruction), 3, 1000);
             usedFallback = true;
-        } catch (groqErr) {
-            console.error(`[Fatal] ทั้ง Gemini และ Groq ล่มทั้งหมด: ${groqErr.message}`);
+        } catch (geminiErr) {
+            console.error(`[Fatal] ทั้ง Groq และ Gemini ล่มทั้งหมด: ${geminiErr.message}`);
             return;
         }
     }
 
     if (usedFallback) {
-        aiResponse += '\n\n*(วิเคราะห์โดย ⚡ Groq Fallback AI)*';
+        aiResponse += '\n\n*(วิเคราะห์โดย 🧠 Gemini Fallback AI)*';
     }
 
     console.log("\n=== 🎯 FINAL RESPONSE ===");
