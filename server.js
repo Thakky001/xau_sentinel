@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { runScoutBot, getBotState, setNextRunAt } from './lib/bot.js';
 import { getLogs } from './lib/logger.js';
 import { initGoogleSheets } from './lib/sheets.js';
-import { startTracker } from './lib/tracker.js';
+import { startTracker, getPortfolioState } from './lib/tracker.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,6 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api/status', (req, res) => {
     res.json({
         ...getBotState(),
+        portfolio: getPortfolioState(),
         logs: getLogs(),
     });
 });
