@@ -51,20 +51,24 @@ class RealBacktester {
 
             // 1. Circuit Breaker (ประเมินจุดออก)
             if (activeTrade) {
+                // 🚨 [QDD Fix] Dynamic Slippage Model
+                const getSlippage = () => activeTrade.atr * (Math.random() * 0.15 + 0.10);
+                const getTpSlippage = () => (Math.random() > 0.5 ? 1 : -1) * (activeTrade.atr * (Math.random() * 0.10 + 0.05));
+
                 if (activeTrade.action === 'BUY') {
                     if (candle.low <= activeTrade.sl) {
-                        this.closeTrade(activeTrade, activeTrade.sl, 'Hit SL');
+                        this.closeTrade(activeTrade, activeTrade.sl - getSlippage(), 'Hit SL');
                         activeTrade = null;
                     } else if (candle.high >= activeTrade.tp) {
-                        this.closeTrade(activeTrade, activeTrade.tp, 'Hit TP');
+                        this.closeTrade(activeTrade, activeTrade.tp + getTpSlippage(), 'Hit TP');
                         activeTrade = null;
                     }
                 } else if (activeTrade.action === 'SELL') {
                     if (candle.high >= activeTrade.sl) {
-                        this.closeTrade(activeTrade, activeTrade.sl, 'Hit SL');
+                        this.closeTrade(activeTrade, activeTrade.sl + getSlippage(), 'Hit SL');
                         activeTrade = null;
                     } else if (candle.low <= activeTrade.tp) {
-                        this.closeTrade(activeTrade, activeTrade.tp, 'Hit TP');
+                        this.closeTrade(activeTrade, activeTrade.tp + getTpSlippage(), 'Hit TP');
                         activeTrade = null;
                     }
                 }
@@ -102,7 +106,7 @@ class RealBacktester {
                         tp = entry - (slDistance * 1.5);
                     }
 
-                    activeTrade = { id: `BT-${i}`, action, entry, sl, tp, pnl: 0 };
+                    activeTrade = { id: `BT-${i}`, action, entry, sl, tp, pnl: 0, atr };
                     this.trades.push(activeTrade);
                 }
             }
