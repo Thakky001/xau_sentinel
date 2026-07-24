@@ -44,11 +44,11 @@ app.listen(PORT, async () => {
     console.log(`🚀 XAU Sentinel Server is running on port ${PORT}`);
     
     // 1. Initialize Google Sheets
-    const sheetsReady = await initGoogleSheets();
+    const sheetsResult = await initGoogleSheets();
     
     // 2. Start Tracker Bot (Circuit Breaker)
-    if (sheetsReady) {
-        startTracker();
+    if (sheetsResult && sheetsResult.success) {
+        startTracker(sheetsResult.openOrders, sheetsResult.balance);
     } else {
         console.warn("⚠️ ไม่สามารถเปิด Tracker Bot ได้เนื่องจาก Database ไม่พร้อม");
     }
