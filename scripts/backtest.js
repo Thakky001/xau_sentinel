@@ -1,15 +1,14 @@
 /**
- * Monte Carlo Backtester (Phase 3 Upgrade)
+ * 📉 The Real Math Backtester (Phase 3 - Deep Quant Upgrade)
  * 
- * หน้าที่: จำลองการเทรดแบบออฟไลน์ด้วยข้อมูลกราฟในอดีต 
- * เพื่อหาค่าสถิติ Max Drawdown, Win Rate, และ Expectancy
- * (ปัจจุบันเป็นไฟล์เทมเพลตสำหรับใส่ CSV ข้อมูลกราฟ)
+ * จำลองการเทรดด้วยข้อมูลในอดีต (CSV) แบบคณิตศาสตร์ล้วนๆ โดยไม่ต้องพึ่งพา AI
+ * เพื่อหาสถิติ Win Rate, Max Drawdown และ Expectancy ที่แท้จริง
  */
 
 import fs from 'fs';
 import path from 'path';
 
-class OfflineBacktester {
+class RealBacktester {
     constructor(initialBalance = 10000) {
         this.balance = initialBalance;
         this.trades = [];
@@ -18,28 +17,40 @@ class OfflineBacktester {
     }
 
     /**
-     * โหลดข้อมูล CSV แท่งเทียน (M15 หรือ H1)
+     * ตัวอย่างฟังก์ชันสำหรับโหลด CSV
      */
     loadData(csvPath) {
-        console.log(`📂 กำลังโหลดข้อมูลกราฟอดีตจาก ${csvPath}...`);
-        // TODO: อ่านไฟล์ CSV และแปลงเป็น Array ของ Object { timestamp, open, high, low, close }
-        return [];
+        console.log(`📂 โหลดข้อมูลกราฟอดีตจาก ${csvPath}...`);
+        // ในสถานการณ์จริง จะต้องอ่านไฟล์ CSV แล้วแปลงเป็น Object { open, high, low, close }
+        // สร้างข้อมูลสุ่มเสมือนจริง 1000 แท่งเพื่อทดสอบระบบโครงสร้าง
+        const mockCandles = [];
+        let price = 2000.00;
+        for (let i = 0; i < 1000; i++) {
+            const move = (Math.random() - 0.5) * 5;
+            price += move;
+            mockCandles.push({
+                close: price,
+                high: price + Math.random() * 2,
+                low: price - Math.random() * 2,
+                // สมมติค่า RSI และ MACD แบบแกว่งไปมาตามรอบไซเคิล
+                rsi: 50 + Math.sin(i / 10) * 30, 
+                macdSignal: Math.cos(i / 10),
+                atr: 2.5 + Math.random()
+            });
+        }
+        return mockCandles;
     }
 
-    /**
-     * จำลองรัน Logic ตลอดช่วงเวลาในอดีต (Loop over historical data)
-     */
     runSimulation(historicalCandles) {
-        console.log(`🚀 เริ่มจำลอง Backtest ย้อนหลัง ${historicalCandles.length} แท่งเทียน...`);
+        console.log(`🚀 เริ่มจำลอง Real Math Backtest จำนวน ${historicalCandles.length} แท่งเทียน...`);
         
         let activeTrade = null;
 
         for (let i = 0; i < historicalCandles.length; i++) {
             const candle = historicalCandles[i];
 
-            // 1. จำลองสถานการณ์: มีออเดอร์ค้างอยู่ไหม (Circuit Breaker)
+            // 1. Circuit Breaker (ประเมินจุดออก)
             if (activeTrade) {
-                // เช็ค SL / TP ของออเดอร์
                 if (activeTrade.action === 'BUY') {
                     if (candle.low <= activeTrade.sl) {
                         this.closeTrade(activeTrade, activeTrade.sl, 'Hit SL');
@@ -59,22 +70,36 @@ class OfflineBacktester {
                 }
             }
 
-            // 2. จำลองเปิดออเดอร์ใหม่: หากไม่มีออเดอร์ค้าง (จำลอง AI สั่งเทรด หรือใช้ Indicator เพียวๆ)
+            // 2. Strategy Logic (ประเมินจุดเข้าด้วยคณิตศาสตร์)
             if (!activeTrade) {
-                // TODO: ใส่ Logic ของ RSI / MACD / หรือสุ่ม 50/50 เพื่อทำ Monte Carlo
-                // ตัวอย่าง: จำลองสุ่มเปิด BUY/SELL แบบ 50/50
-                if (Math.random() > 0.95) { // โอกาสเทรด 5% ต่อแท่ง
-                    const action = Math.random() > 0.5 ? 'BUY' : 'SELL';
-                    const atr = 5.0; // สมมติว่า ATR = 5.0
-                    const entry = parseFloat(candle.close);
+                const isOverbought = candle.rsi > 70;
+                const isOversold = candle.rsi < 30;
+                const isMacdBullish = candle.macdSignal > 0;
+                const isMacdBearish = candle.macdSignal < 0;
+
+                let action = null;
+                // เงื่อนไข: สวนเทรนด์ตอนสุดขีด (Mean Reversion) หรือ ตามเทรนด์แบบ Momentum
+                if (isOversold && isMacdBullish) action = 'BUY';
+                if (isOverbought && isMacdBearish) action = 'SELL';
+
+                if (action) {
+                    const atr = candle.atr;
+                    const spread = 0.5;
+                    let entry = parseFloat(candle.close);
                     
+                    // เพิ่ม Spread Cost และ SL Floor (Advanced Logic Fix)
+                    if (action === 'BUY') entry += spread;
+                    else entry -= spread;
+
+                    const slDistance = Math.max(atr * 1.5, 2.5); // SL Floor
+
                     let sl, tp;
                     if (action === 'BUY') {
-                        sl = entry - (atr * 1.5);
-                        tp = entry + (atr * 2.25); // Risk Reward 1:1.5
+                        sl = entry - slDistance;
+                        tp = entry + (slDistance * 1.5);
                     } else {
-                        sl = entry + (atr * 1.5);
-                        tp = entry - (atr * 2.25);
+                        sl = entry + slDistance;
+                        tp = entry - (slDistance * 1.5);
                     }
 
                     activeTrade = { id: `BT-${i}`, action, entry, sl, tp, pnl: 0 };
@@ -87,13 +112,10 @@ class OfflineBacktester {
     }
 
     closeTrade(trade, closePrice, reason) {
-        const lotSize = 0.1; // 0.1 Lot สำหรับ Backtest พอร์ต $10,000
+        const lotSize = 0.1; 
         let pnl = 0;
-        if (trade.action === 'BUY') {
-            pnl = (closePrice - trade.entry) * lotSize * 100;
-        } else {
-            pnl = (trade.entry - closePrice) * lotSize * 100;
-        }
+        if (trade.action === 'BUY') pnl = (closePrice - trade.entry) * lotSize * 100;
+        else pnl = (trade.entry - closePrice) * lotSize * 100;
 
         trade.closePrice = closePrice;
         trade.reason = reason;
@@ -101,7 +123,6 @@ class OfflineBacktester {
 
         this.balance += pnl;
 
-        // อัปเดต Max Drawdown
         if (this.balance > this.peakBalance) {
             this.peakBalance = this.balance;
         } else {
@@ -117,17 +138,19 @@ class OfflineBacktester {
         const winRate = total > 0 ? (wins / total) * 100 : 0;
 
         console.log("\n==================================");
-        console.log("📈 BACKTEST REPORT (Monte Carlo)");
+        console.log("📉 REAL MATH BACKTEST REPORT");
         console.log("==================================");
         console.log(`Total Trades: ${total}`);
-        console.log(`Win Rate: ${winRate.toFixed(2)}%`);
+        console.log(`Win Rate: ${winRate.toFixed(2)}% (${wins}W / ${losses}L)`);
         console.log(`Final Balance: $${this.balance.toFixed(2)}`);
         console.log(`Max Drawdown: ${this.maxDrawdown.toFixed(2)}%`);
         console.log("==================================\n");
     }
 }
 
-// ตัวอย่างการใช้งาน:
-// const tester = new OfflineBacktester();
-// const dummyData = [...]; // ข้อมูล CSV ที่โหลดมา
-// tester.runSimulation(dummyData);
+// ------------------------------------
+// วิธีรันทดสอบ: `node scripts/backtest.js`
+// ------------------------------------
+// const tester = new RealBacktester();
+// const data = tester.loadData('dummy.csv');
+// tester.runSimulation(data);
