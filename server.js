@@ -5,6 +5,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { runScoutBot, getBotState, setNextRunAt } from './lib/bot.js';
 import { getLogs } from './lib/logger.js';
+import { initGoogleSheets } from './lib/sheets.js';
+import { startTracker } from './lib/tracker.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -37,8 +39,20 @@ app.get('/', (req, res) => {
 });
 
 // ─── Start Server ────────────────────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`🚀 XAU Sentinel Server is running on port ${PORT}`);
+    
+    // 1. Initialize Google Sheets
+    const sheetsReady = await initGoogleSheets();
+    
+    // 2. Start Tracker Bot (Circuit Breaker)
+    if (sheetsReady) {
+        startTracker();
+    } else {
+        console.warn("⚠️ ไม่สามารถเปิด Tracker Bot ได้เนื่องจาก Database ไม่พร้อม");
+    }
+
+    // 3. Start Scout Bot Scheduler
     scheduleBot();
 });
 
