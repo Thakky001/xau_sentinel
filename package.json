@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
+    "start": "node --env-file=.env server.js",
     "test": "node --env-file=.env tests/test-suite.js",
     "test:cron": "node --env-file=.env tests/test-cron.js"
   },
